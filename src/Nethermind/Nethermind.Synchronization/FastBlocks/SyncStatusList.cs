@@ -52,17 +52,29 @@ namespace Nethermind.Synchronization.FastBlocks
 
                 if (_statuses.TrySet(currentNumber, FastBlockStatus.Sent, out FastBlockStatus status))
                 {
-                    if (_cache.TryGet(currentNumber, out BlockInfo blockInfo))
+                    BlockInfo? blockInfo;
+                    if (_cache.TryGet(currentNumber, out BlockInfo cachedInfo))
                     {
                         _cache.Delete(currentNumber);
+                        blockInfo = cachedInfo;
                     }
                     else
                     {
                         blockInfo = _blockTree.FindCanonicalBlockInfo(currentNumber);
                     }
 
-                    blockInfos[collected] = blockInfo;
-                    collected++;
+                    if (blockInfo is null)
+                    {
+                        // The canonical chain level is not settled yet (concurrent forward sync can touch it).
+                        // A null entry is dropped from the batch, so leaving the block Sent would orphan it
+                        // forever and freeze the insert frontier on it. Revert so a later scan retries.
+                        _statuses.TrySet(currentNumber, FastBlockStatus.Pending);
+                    }
+                    else
+                    {
+                        blockInfos[collected] = blockInfo;
+                        collected++;
+                    }
                 }
                 else if (status == FastBlockStatus.Inserted)
                 {
