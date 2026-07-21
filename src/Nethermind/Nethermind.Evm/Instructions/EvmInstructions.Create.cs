@@ -81,7 +81,7 @@ public static partial class EvmInstructions
 
         // Obtain the current EVM specification and check if the call is static (static calls cannot create contracts).
         IReleaseSpec spec = vm.Spec;
-        if (vm.VmState.IsStatic)
+        if (vm.VmState.Env.IsStatic)
         {
             goto StaticCallViolation;
         }
@@ -234,7 +234,7 @@ public static partial class EvmInstructions
             outputDestination: 0,
             outputLength: 0,
             executionType: TOpCreate.ExecutionType,
-            isStatic: vm.VmState.IsStatic,
+            isStatic: vm.VmState.Env.IsStatic,
             isCreateOnPreExistingAccount: accountExists,
             env: callEnv,
             stateForAccessLists: in vm.VmState.AccessTracker,

@@ -1078,7 +1078,7 @@ public static partial class EvmInstructions
     {
         VmState<TGasPolicy> vmState = vm.VmState;
         // Logging is not permitted in static call contexts.
-        if (vmState.IsStatic) goto StaticCallViolation;
+        if (vmState.Env.IsStatic) goto StaticCallViolation;
 
         // Pop memory offset and length for the log data.
         if (!stack.PopUInt256(out UInt256 position, out UInt256 length)) goto StackUnderflow;

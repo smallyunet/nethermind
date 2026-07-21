@@ -258,7 +258,7 @@ public static partial class EvmInstructions
         IWorldState state = vm.WorldState;
 
         // SELFDESTRUCT is forbidden during static calls.
-        if (vmState.IsStatic)
+        if (vmState.Env.IsStatic)
             goto StaticCallViolation;
 
         // If Shanghai DDoS protection is active, charge the appropriate gas cost.

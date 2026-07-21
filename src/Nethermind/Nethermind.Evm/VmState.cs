@@ -16,7 +16,7 @@ namespace Nethermind.Evm;
 /// <summary>
 /// State for EVM Calls
 /// </summary>
-[DebuggerDisplay("{ExecutionType} to {Env.ExecutingAccount}, G {GasAvailable} R {Refund} PC {ProgramCounter} OUT {OutputDestination}:{OutputLength}")]
+[DebuggerDisplay("{Env.ExecutionType} to {Env.ExecutingAccount}, G {GasAvailable} R {Refund} PC {ProgramCounter} OUT {Env.OutputDestination}:{Env.OutputLength}")]
 public class VmState<TGasPolicy> : IDisposable
     where TGasPolicy : struct, IGasPolicy<TGasPolicy>
 {
@@ -36,24 +36,10 @@ public class VmState<TGasPolicy> : IDisposable
     // State-gas refund already made spendable in this frame while its accounting correction
     // still has to reach the ancestor frame that originally paid the state gas.
     public long StateGasRefundAdvanced;
-    internal long OutputDestination { get; private set; } // TODO: move to CallEnv
-    internal long OutputLength { get; private set; } // TODO: move to CallEnv
     public long Refund { get; set; }
     public int DataStackHead;
-    public ExecutionType ExecutionType { get; private set; } // TODO: move to CallEnv
     public int ProgramCounter { get; set; }
-    public bool IsTopLevel { get; private set; } // TODO: move to CallEnv
     private bool _canRestore;
-    public bool IsStatic { get; private set; } // TODO: move to CallEnv
-    public bool IsContinuation { get; set; } // TODO: move to CallEnv
-    public bool IsCreateOnPreExistingAccount { get; private set; } // TODO: move to CallEnv
-    public bool IsCreateStateGasCharged { get; private set; } // TODO: move to CallEnv
-
-    /// <summary>
-    /// EIP-8037: the parent <c>*CALL</c> charged NEW_ACCOUNT state gas up-front for this (dead)
-    /// recipient; on this frame's error/revert no account is created, so the parent refunds it.
-    /// </summary>
-    public bool NewAccountCharged { get; private set; } // TODO: move to CallEnv
 
     private bool _isDisposed = true;
 
@@ -162,19 +148,19 @@ public class VmState<TGasPolicy> : IDisposable
         Gas = gas;
         InitialStateGasUsed = TGasPolicy.GetStateGasUsed(in gas);
         StateGasRefundAdvanced = 0;
-        OutputDestination = outputDestination;
-        OutputLength = outputLength;
         Refund = 0;
         DataStackHead = 0;
         ProgramCounter = 0;
-        ExecutionType = executionType;
-        IsTopLevel = isTopLevel;
         _canRestore = !isTopLevel;
-        IsStatic = isStatic;
-        IsContinuation = false;
-        IsCreateOnPreExistingAccount = isCreateOnPreExistingAccount;
-        IsCreateStateGasCharged = isCreateStateGasCharged;
-        NewAccountCharged = newAccountCharged;
+        env.OutputDestination = outputDestination;
+        env.OutputLength = outputLength;
+        env.ExecutionType = executionType;
+        env.IsTopLevel = isTopLevel;
+        env.IsStatic = isStatic;
+        env.IsContinuation = false;
+        env.IsCreateOnPreExistingAccount = isCreateOnPreExistingAccount;
+        env.IsCreateStateGasCharged = isCreateStateGasCharged;
+        env.NewAccountCharged = newAccountCharged;
 
         if (!_isDisposed)
         {
@@ -189,7 +175,7 @@ public class VmState<TGasPolicy> : IDisposable
         static void ThrowIsInUse() => throw new InvalidOperationException("Already in use");
     }
 
-    public Address From => ExecutionType switch
+    public Address From => Env.ExecutionType switch
     {
         ExecutionType.STATICCALL or ExecutionType.CALL or ExecutionType.CALLCODE or ExecutionType.CREATE
             or ExecutionType.CREATE2 or ExecutionType.TRANSACTION => Env.Caller,
@@ -228,7 +214,7 @@ public class VmState<TGasPolicy> : IDisposable
         _memory.Dispose();
         _memory = default;
         _accessTracker = default;
-        if (!IsTopLevel) _env?.Dispose();
+        if (_env is not null && !_env.IsTopLevel) _env.Dispose();
         _env = null;
         _snapshot = default;
         StateGasRefundAdvanced = 0;

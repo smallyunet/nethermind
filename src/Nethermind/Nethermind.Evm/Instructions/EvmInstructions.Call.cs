@@ -129,7 +129,7 @@ public static partial class EvmInstructions
 
         bool hasValueTransfer = TOpCall.ExecutionType != ExecutionType.DELEGATECALL && !callValue.IsZero;
         // Enforce static call restrictions: no value transfer allowed unless it's a CALLCODE.
-        if (vm.VmState.IsStatic && hasValueTransfer && TOpCall.ExecutionType != ExecutionType.CALLCODE)
+        if (vm.VmState.Env.IsStatic && hasValueTransfer && TOpCall.ExecutionType != ExecutionType.CALLCODE)
             return EvmExceptionType.StaticCallViolation;
 
         // Determine caller and target based on the call type.
@@ -341,7 +341,7 @@ public static partial class EvmInstructions
                     outputOffset.ToLong(),
                     outputLength.ToLong(),
                     TOpCall.ExecutionType,
-                    TOpCall.ExecutionType == ExecutionType.STATICCALL || vm.VmState.IsStatic,
+                    TOpCall.ExecutionType == ExecutionType.STATICCALL || vm.VmState.Env.IsStatic,
                     in snapshot,
                     ref stack,
                     newAccountCharged);
@@ -354,7 +354,7 @@ public static partial class EvmInstructions
                 outputDestination: outputOffset.ToLong(),
                 outputLength: outputLength.ToLong(),
                 executionType: TOpCall.ExecutionType,
-                isStatic: TOpCall.ExecutionType == ExecutionType.STATICCALL || vm.VmState.IsStatic,
+                isStatic: TOpCall.ExecutionType == ExecutionType.STATICCALL || vm.VmState.Env.IsStatic,
                 isCreateOnPreExistingAccount: false,
                 env: callEnv,
                 stateForAccessLists: in vm.VmState.AccessTracker,

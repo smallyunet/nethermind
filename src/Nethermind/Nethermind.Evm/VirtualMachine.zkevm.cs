@@ -69,7 +69,7 @@ public unsafe partial class VirtualMachine<TGasPolicy> where TGasPolicy : struct
             RemoveAdvancedStateGasRefund(child, ref child.Gas);
             TGasPolicy.RestoreChildStateGasOnHalt(ref parent.Gas, in child.Gas);
             // EIP-8037: the failed call did not create its (dead) recipient; refund NEW_ACCOUNT.
-            if (child.NewAccountCharged)
+            if (child.Env.NewAccountCharged)
                 CreditStateGasRefund(ref parent.Gas, TGasPolicy.GetNewAccountStateCost());
             child.Dispose();
             ReturnDataBuffer = Array.Empty<byte>();
@@ -88,7 +88,7 @@ public unsafe partial class VirtualMachine<TGasPolicy> where TGasPolicy : struct
             RemoveAdvancedStateGasRefund(child, ref child.Gas);
             TGasPolicy.RestoreChildStateGas(ref parent.Gas, in child.Gas);
             // EIP-8037: the reverted call did not create its (dead) recipient; refund NEW_ACCOUNT.
-            if (child.NewAccountCharged)
+            if (child.Env.NewAccountCharged)
                 CreditStateGasRefund(ref parent.Gas, TGasPolicy.GetNewAccountStateCost());
         }
 

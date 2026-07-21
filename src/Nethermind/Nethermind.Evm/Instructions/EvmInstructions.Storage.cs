@@ -86,7 +86,7 @@ public static partial class EvmInstructions
         VmState<TGasPolicy> vmState = vm.VmState;
 
         // Disallow storage modification during static calls.
-        if (vmState.IsStatic) goto StaticCallViolation;
+        if (vmState.Env.IsStatic) goto StaticCallViolation;
 
         // Deduct the gas cost for TSTORE.
         TGasPolicy.Consume<TStoreGasCost>(ref gas);
@@ -351,7 +351,7 @@ public static partial class EvmInstructions
 
         VmState<TGasPolicy> vmState = vm.VmState;
         // Disallow storage modifications in static calls.
-        if (vmState.IsStatic) goto StaticCallViolation;
+        if (vmState.Env.IsStatic) goto StaticCallViolation;
 
         IReleaseSpec spec = vm.Spec;
 
@@ -459,7 +459,7 @@ public static partial class EvmInstructions
 
         VmState<TGasPolicy> vmState = vm.VmState;
         // Disallow storage modifications in static calls.
-        if (vmState.IsStatic) goto StaticCallViolation;
+        if (vmState.Env.IsStatic) goto StaticCallViolation;
 
         IReleaseSpec spec = vm.Spec;
         SpecGasCosts gasCosts = spec.GasCosts;
