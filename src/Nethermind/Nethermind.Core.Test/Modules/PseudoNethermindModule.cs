@@ -37,6 +37,10 @@ public class PseudoNethermindModule(ChainSpec spec, IConfigProvider configProvid
         IInitConfig initConfig = configProvider.GetConfig<IInitConfig>();
         initConfig.AutoDump = DumpOptions.None;
 
+        // Set before NethermindModule loads: FlatWorldStateModule reads this at module-load time
+        // to wire the inert persisted-snapshot tier instead of file-backed arenas at a shared path.
+        configProvider.GetConfig<IFlatDbConfig>().EnableLongFinality = false;
+
         base.Load(builder);
         builder
             .AddModule(new NethermindModule(spec, configProvider, logManager))
